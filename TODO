@@ -2,10 +2,8 @@
 * Configuration through preferences and wiki configuration, rather
   than code
 
-* Caching
+* Caching?
 
-* Error handling
-
-* Raising template handling into the base class
+* Improved Error handling
 
 * Tests which actually test, rather than skipping because of templates

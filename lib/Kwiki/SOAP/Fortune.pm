@@ -20,20 +20,23 @@ sub register {
     $registry->add(wafl => fortunesoap => 'Kwiki::SOAP::Fortune::Wafl');
 }
 
+sub get_result {
+    my $type = shift;
+    $self->soap(
+        $self->wsdl,
+        $self->method,
+        [$type]
+    );
+}
+
 package Kwiki::SOAP::Fortune::Wafl;
 use base 'Kwiki::SOAP::Wafl';
 
 sub html {
     my ($type) = split(' ', $self->arguments);
     $self->use_class('fortunesoap');
-    my $result;
+    my $result = $self->fortunesoap->get_result($type);
 
-    eval {
-        $result = $self->soap($self->fortunesoap->wsdl,
-            $self->fortunesoap->method, [$type]);
-    };
-    $result = $@ if $@;
-    return $self->wafl_error unless $result;
 
     $self->hub->template->process('fortune_soap.html',
         fortune => $result,

@@ -13,7 +13,7 @@ skip "templates make tests hard", 1;
 my $content =<<"EOF";
 === Hello
 
-{soapwafl http://www.xmethods.net/sd/2001/TemperatureService.wsdl getTemp 98112}
+{soap http://www.xmethods.net/sd/2001/TemperatureService.wsdl getTemp 98112}
 
 EOF
 

@@ -4,10 +4,10 @@ use warnings;
 use Kwiki::Plugin '-Base';
 use Kwiki::Installer '-base';
 
-our $VERSION = 0.03;
+our $VERSION = 0.04;
 
 const class_title => 'generic soap retrieval';
-const class_id => 'soapwafl';
+const class_id => 'soap_access';
 const css_file => 'soap.css';
 
 sub register {
@@ -16,43 +16,51 @@ sub register {
     $registry->add(wafl => soap => 'Kwiki::SOAP::Wafl');
 }
 
+sub soap {
+    require SOAP::Lite;
+    my $wsdl = shift;
+    my $method = shift;
+    my $args_list = shift;
+    my $soap;
+    my $result;
+
+    eval {
+        $soap = SOAP::Lite->service($wsdl);
+        $result = $soap->$method(@$args_list);
+    };
+    if ($@) {
+        return {error => (split(/\n/,$@))[0]};
+    }
+    return $result;
+}
+
 package Kwiki::SOAP::Wafl;
 use base 'Spoon::Formatter::WaflPhrase';
-use SOAP::Lite;
-use YAML;
+
+# XXX move most of this up into the top package
+# and break it up so tests can access it and 
+# some of the soap stuff can be wrapped in evals
+# to trap errors (which cause death at the moment)
 
 sub html {
     my ($wsdl, $method, @args) = split(' ', $self->arguments);
     return $self->walf_error
         unless $method;
 
-    $self->use_class('soapwafl');
-    my $result = $self->soap($wsdl, $method, \@args);
-    print STDERR Dump($result);
+    $self->use_class('soap_access');
+    my $result = $self->soap_access->soap($wsdl, $method, \@args);
 
     return $self->pretty($result);
 }
 
-sub soap {
-    my $wsdl = shift;
-    my $method = shift;
-    my $args_list = shift;
-
-    my $soap = SOAP::Lite->service($wsdl);
-
-    return $soap->$method(@$args_list);
-}
-
 sub pretty {
+    require YAML;
     my $results = shift;
-
     $self->hub->template->process('base_soap.html',
-        soap_class  => $self->soapwafl->class_id,
-        soap_output => Dump($results),
+        soap_class  => $self->soap_access->class_id,
+        soap_output => YAML::Dump($results),
     );
 }
-
-
 
 package Kwiki::SOAP;
 1;
