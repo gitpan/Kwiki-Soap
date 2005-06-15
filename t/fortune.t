@@ -2,14 +2,18 @@ use lib 't', 'lib';
 use strict;
 use warnings;
 use Test::More tests => 2;
-use Kwiki;
+
+my $down = 1;
 
 BEGIN {
     use_ok 'Kwiki::SOAP::Fortune';
 }
 
 SKIP: {
-skip "templates make tests hard", 1;
+    eval {require Kwiki::Test};
+    skip "Kwiki::Test needed for tests", 1 if $@;
+    skip "fortune service unreliable", 1 if $down;
+
 my $content =<<"EOF";
 === Hello
 
@@ -17,16 +21,12 @@ my $content =<<"EOF";
 
 EOF
 
-    my $kwiki = Kwiki->new;
-    my $hub = $kwiki->load_hub({plugin_classes => ['Kwiki::SOAP::Fortune']});
-    my $registry = $hub->load_class('registry');
-    $registry->update();
-    $hub->load_registry();
-    my $formatter = $hub->load_class('formatter');
+    my $kwiki = Kwiki::Test->new->init(['Kwiki::SOAP::Fortune']);
+    my $formatter = $kwiki->hub->formatter;
 
     my $output = $formatter->text_to_html($content);
-    diag($output);
     like($output, qr/fortune/, 'content looks okay');
+    $kwiki->cleanup;
 }
 
 

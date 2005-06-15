@@ -4,7 +4,7 @@ use warnings;
 use Kwiki::Plugin '-Base';
 use Kwiki::Installer '-base';
 
-our $VERSION = 0.04;
+our $VERSION = 0.05;
 
 const class_title => 'generic soap retrieval';
 const class_id => 'soap_access';
@@ -47,8 +47,7 @@ sub html {
     return $self->walf_error
         unless $method;
 
-    $self->use_class('soap_access');
-    my $result = $self->soap_access->soap($wsdl, $method, \@args);
+    my $result = $self->hub->soap_access->soap($wsdl, $method, \@args);
 
     return $self->pretty($result);
 }
@@ -57,7 +56,7 @@ sub pretty {
     require YAML;
     my $results = shift;
     $self->hub->template->process('base_soap.html',
-        soap_class  => $self->soap_access->class_id,
+        soap_class  => $self->hub->soap_access->class_id,
         soap_output => YAML::Dump($results),
     );
 }
